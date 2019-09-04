@@ -8,10 +8,10 @@ Instalado y configurado [Node](https://nodejs.org).
 ## Configurar la conexión
 Los parámetros de conexión con la base de datos se encuentran en el archivo `src/database.js`. Cambiar el `user` y `password` de acuerdo al servidor MySQL instalado.
 
-##Ejecutar el servidor
+## Ejecutar el servidor
 Se debe ejecutar el archivo `index.js` situado en la carpeta `src` con el comando `node` en la línea de comandos.
 Ejemplo: 
 `node src/index.js`
 
-##Observaciones
+## Observaciones
 El servidor corre sobre el puerto `3000`.
