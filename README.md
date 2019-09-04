@@ -1,5 +1,6 @@
 # SGT Backend
 Software del lado servidor del Proyecto de tesis SGT (Sistema de Gestión de Talleres) de la UNVES.
+Proporciona una API siguiendo los principios REST e utilizando JSON como portador de datos.
 
 ## Requisitos
 Instalado y configurado el servidor de base de datos [MySQL](https://www.mysql.com)
