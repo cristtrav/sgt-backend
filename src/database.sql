@@ -45,10 +45,10 @@ ENGINE = InnoDB;
 -- Table `sgt`.`ciudad`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`ciudad` (
+  `iddepartamento` INT NOT NULL,
   `idciudad` INT NOT NULL,
   `nombre` VARCHAR(45) NULL,
-  `iddepartamento` INT NOT NULL,
-  PRIMARY KEY (`idciudad`),
+  PRIMARY KEY (`iddepartamento`, `idciudad`),
   INDEX `fk_ciudad_departamento1_idx` (`iddepartamento` ASC),
   CONSTRAINT `fk_ciudad_departamento1`
     FOREIGN KEY (`iddepartamento`)
@@ -67,13 +67,14 @@ CREATE TABLE IF NOT EXISTS `sgt`.`cliente` (
   `apellidos` VARCHAR(50) NULL,
   `telefono` VARCHAR(20) NULL,
   `dv_ruc` TINYINT NULL COMMENT 'Digito verificador de SET: 0-9',
-  `idciudad` INT(11) NOT NULL,
   `fecha_registro` DATE NULL,
-  PRIMARY KEY (`ci`),
-  INDEX `fk_cliente_ciudad1_idx` (`idciudad` ASC),
+  `iddepartamento` INT NOT NULL,
+  `idciudad` INT NOT NULL,
+  PRIMARY KEY (`ci`, `iddepartamento`, `idciudad`),
+  INDEX `fk_cliente_ciudad1_idx` (`iddepartamento` ASC, `idciudad` ASC),
   CONSTRAINT `fk_cliente_ciudad1`
-    FOREIGN KEY (`idciudad`)
-    REFERENCES `sgt`.`ciudad` (`idciudad`)
+    FOREIGN KEY (`iddepartamento` , `idciudad`)
+    REFERENCES `sgt`.`ciudad` (`iddepartamento` , `idciudad`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
@@ -256,8 +257,15 @@ COMMENT = 'Servicios tecnicos realizados a un determinado vehiculo';
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`proveedor` (
   `idproveedor` INT NOT NULL,
-  `razonsocial` VARCHAR(45) NULL,
-  `telefono` VARCHAR(20) NULL,
+  `razonsocial` VARCHAR(80) NULL,
+  `telefono` VARCHAR(25) NULL,
+  `dv_ruc` TINYINT NULL,
+  `email` VARCHAR(80) NULL,
+  `documento` INT NULL,
+  `contacto` VARCHAR(50) NULL,
+  `telefono_contacto` VARCHAR(25) NULL,
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_ingreso` DATE NULL,
   PRIMARY KEY (`idproveedor`))
 ENGINE = InnoDB
 COMMENT = 'Proveedores de repuestos';
@@ -644,6 +652,11 @@ CREATE TABLE IF NOT EXISTS `sgt`.`vw_clientes_ciudades_departamentos` (`ci` INT,
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_departamentos_regiones` (`iddepartamento` INT, `nombre` INT, `idregion` INT, `region` INT);
 
 -- -----------------------------------------------------
+-- Placeholder table for view `sgt`.`vw_proveedores`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`vw_proveedores` (`idproveedor` INT, `razonsocial` INT, `telefono` INT, `dvRuc` INT, `documento` INT, `contacto` INT, `telefonoContacto` INT, `activo` INT, `fechaIngreso` INT, `email` INT);
+
+-- -----------------------------------------------------
 -- View `sgt`.`vw_ciudades_departamentos`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `sgt`.`vw_ciudades_departamentos`;
@@ -663,6 +676,13 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY D
 DROP TABLE IF EXISTS `sgt`.`vw_departamentos_regiones`;
 USE `sgt`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_departamentos_regiones` AS select `sgt`.`departamento`.`iddepartamento` AS `iddepartamento`,`sgt`.`departamento`.`nombre` AS `nombre`,`sgt`.`departamento`.`idregion` AS `idregion`,`sgt`.`region`.`nombre` AS `region` from (`sgt`.`departamento` join `sgt`.`region` on((`sgt`.`departamento`.`idregion` = `sgt`.`region`.`idregion`)));
+
+-- -----------------------------------------------------
+-- View `sgt`.`vw_proveedores`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sgt`.`vw_proveedores`;
+USE `sgt`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_proveedores` AS select `sgt`.`proveedor`.`idproveedor` AS `idproveedor`,`sgt`.`proveedor`.`razonsocial` AS `razonsocial`,`sgt`.`proveedor`.`telefono` AS `telefono`,`sgt`.`proveedor`.`dv_ruc` AS `dvRuc`,`sgt`.`proveedor`.`documento` AS `documento`,`sgt`.`proveedor`.`contacto` AS `contacto`,`sgt`.`proveedor`.`telefono_contacto` AS `telefonoContacto`,`sgt`.`proveedor`.`activo` AS `activo`,`sgt`.`proveedor`.`fecha_ingreso` AS `fechaIngreso`,`sgt`.`proveedor`.`email` AS `email` from `sgt`.`proveedor`;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

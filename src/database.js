@@ -6,39 +6,39 @@ const user = "toor";
 const password = "1qa2ws3ed";
 const database = "sgt";
 
-let mysqlConnection;
+var data;
 
 try {
-    //Crear base de datos si no existe
-    let data = fs.readFileSync(__dirname + '/database.sql', 'utf8');
-    const mysqlConIni = mysql.createConnection({ multipleStatements: true, host, user, password });
-    mysqlConIni.connect(function (err) {
+    //leer SQL
+    data = fs.readFileSync(__dirname + '/database.sql', 'utf8');
+} catch (e) {
+    console.log(e);
+}
+
+//Crear base de datos si no existe
+const mysqlConnection = mysql.createConnection({ multipleStatements: true, host, user, password });
+mysqlConnection.connect(function (err) {
         if (err) {
             console.log("Error al conectar e inicializar");
             console.log(err);
         } else {
-            mysqlConIni.query(data, (err, rows, fields) => {
+            mysqlConnection.query(data, (err, rows, fields) => {
                 if (!err) {
                     console.log("Base de datos inicializada");
-                    
                     //Luego de inicializar retornar la conexion para utilizar
-                    mysqlConnection = mysql.createConnection({ host, user, password, database });
-                    mysqlConnection.connect(function (err) {
-                        if (err) {
-                            console.log("Error al conectar a la base de datos");
-                            console.log(err);
-                        } else {
-                            console.log("Conectado a la base de datos.");
+                    mysqlConnection.query(`USE ${database}`, (error, rows, fields)=>{
+                        if(!error){
+                            console.log("Base de datos cambiada a SGT");
+                        }else{
+                            console.log("Error al cambiar a base de datos SGT");
+                            console.log(error);
                         }
-                    });
+                    });                
                 } else {
                     console.log(err);
                 }
             });
         }
     });
-} catch (e) {
-    console.log(e);
-}
 
-module.exports = { mysqlConnection };
+module.exports = mysqlConnection;
