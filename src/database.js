@@ -2,8 +2,8 @@ const mysql = require("mysql");
 const fs = require("fs");
 
 const host = "localhost";
-const user = "toor";
-const password = "1qa2ws3ed";
+const user = "sgt";
+const password = "sgt-devel";
 const database = "sgt";
 
 var data;

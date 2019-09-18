@@ -36,10 +36,10 @@ router.post("/", (req, res) => {
     });
 });
 
-router.put("/:idciudad", (req, res) => {
-    const { idciudad } = req.params;
-    const { nombre, iddepartamento } = req.body;
-    mysqlConnection.query("UPDATE ciudad SET nombre = ?, iddepartamento = ? WHERE idciudad = ?", [nombre, iddepartamento, idciudad], (err, rows, fields) => {
+router.put("/", (req, res) => {    
+    const { idciudad, nombre, iddepartamento } = req.body;
+    mysqlConnection.query("UPDATE ciudad SET nombre = ? WHERE idciudad = ? AND iddepartamento = ?",
+     [nombre, idciudad, iddepartamento], (err, rows, fields) => {
         if (!err) {
             res.sendStatus(204);
         } else {
@@ -48,9 +48,10 @@ router.put("/:idciudad", (req, res) => {
     });
 });
 
-router.delete("/:idciudad", (req, res) => {
-    const { idciudad } = req.params;
-    mysqlConnection.query("DELETE FROM ciudad WHERE idciudad = ?", [idciudad], (err, rows, fields) => {
+router.delete("/", (req, res) => {
+    const { idciudad, iddepartamento } = req.query;
+    mysqlConnection.query("DELETE FROM ciudad WHERE idciudad = ? AND iddepartamento = ?",
+     [idciudad, iddepartamento], (err, rows, fields) => {
         if (!err) {
             res.sendStatus(204);
         } else {
