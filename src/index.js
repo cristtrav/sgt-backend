@@ -22,6 +22,8 @@ app.use("/api/departamentos", require("./routes/departamentos"));
 app.use("/api/ciudades", require("./routes/ciudades"));
 app.use("/api/clientes", require("./routes/clientes"));
 app.use("/api/proveedores", require("./routes/proveedores"));
+app.use("/api/marcas", require("./routes/marcas"));
+app.use("/api/modelos", require("./routes/modelos"));
 
 //Starting the server
 app.listen(app.get("port"), () => {

@@ -142,12 +142,13 @@ COMMENT = 'Marca de los vehiculos';
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`modelo` (
   `idmodelo` INT NOT NULL,
-  `nombre` CHAR(60) NULL,
-  `marca` INT NOT NULL,
+  `nombre` CHAR(20) NULL,
+  `idmarca` INT NOT NULL,
+  `anio` YEAR NULL,
   PRIMARY KEY (`idmodelo`),
-  INDEX `fk_modelo_marca1_idx` (`marca` ASC),
+  INDEX `fk_modelo_marca1_idx` (`idmarca` ASC),
   CONSTRAINT `fk_modelo_marca1`
-    FOREIGN KEY (`marca`)
+    FOREIGN KEY (`idmarca`)
     REFERENCES `sgt`.`marca` (`idmarca`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
@@ -160,7 +161,6 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `sgt`.`vehiculo` (
   `idvehiculo` INT NOT NULL,
   `descripcion` VARCHAR(45) NULL,
-  `anio` YEAR NULL,
   `propietario` INT NOT NULL,
   `observacion` VARCHAR(200) NULL,
   `fecha_registro` DATE NULL,
@@ -652,6 +652,11 @@ CREATE TABLE IF NOT EXISTS `sgt`.`vw_clientes_ciudades_departamentos` (`ci` INT,
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_departamentos_regiones` (`iddepartamento` INT, `nombre` INT, `idregion` INT, `region` INT);
 
 -- -----------------------------------------------------
+-- Placeholder table for view `sgt`.`vw_modelos`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`vw_modelos` (`idmodelo` INT, `nombre` INT, `idmarca` INT, `marca` INT, `anio` INT);
+
+-- -----------------------------------------------------
 -- Placeholder table for view `sgt`.`vw_proveedores`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_proveedores` (`idproveedor` INT, `razonsocial` INT, `telefono` INT, `dvRuc` INT, `documento` INT, `contacto` INT, `telefonoContacto` INT, `activo` INT, `fechaIngreso` INT, `email` INT);
@@ -676,6 +681,13 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY D
 DROP TABLE IF EXISTS `sgt`.`vw_departamentos_regiones`;
 USE `sgt`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_departamentos_regiones` AS select `sgt`.`departamento`.`iddepartamento` AS `iddepartamento`,`sgt`.`departamento`.`nombre` AS `nombre`,`sgt`.`departamento`.`idregion` AS `idregion`,`sgt`.`region`.`nombre` AS `region` from (`sgt`.`departamento` join `sgt`.`region` on((`sgt`.`departamento`.`idregion` = `sgt`.`region`.`idregion`)));
+
+-- -----------------------------------------------------
+-- View `sgt`.`vw_modelos`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sgt`.`vw_modelos`;
+USE `sgt`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_modelos` AS select `sgt`.`modelo`.`idmodelo` AS `idmodelo`,`sgt`.`modelo`.`nombre` AS `nombre`,`sgt`.`modelo`.`idmarca` AS `idmarca`,`sgt`.`marca`.`nombre` AS `marca`,`sgt`.`modelo`.`anio` AS `anio` from (`sgt`.`modelo` join `sgt`.`marca` on((`sgt`.`marca`.`idmarca` = `sgt`.`modelo`.`idmarca`)));
 
 -- -----------------------------------------------------
 -- View `sgt`.`vw_proveedores`
