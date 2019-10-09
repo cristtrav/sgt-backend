@@ -6,12 +6,12 @@ const util = require("./../util");
 
 router.post("/", (req, res) => {
     console.log(req.body);
-    const { ci, nombres, apellidos, telefono, dvRuc, idciudad, fechaIngreso } = req.body;
+    const { ci, nombres, apellidos, telefono, dvRuc, idciudad, iddepartamento,fechaIngreso } = req.body;
     const fi = new Date(fechaIngreso);
     const strFi = `${fi.getFullYear()}-${fi.getMonth() + 1}-${fi.getDate()}`;
     database.query(`INSERT INTO 
-    cliente(ci, nombres, apellidos, telefono, dv_ruc, idciudad, fecha_registro) 
-    VALUES(?, ?, ?, ?, ?, ?, ?)`, [ci, nombres, apellidos, telefono, dvRuc, idciudad, strFi], (err, rows, fields) => {
+    cliente(ci, nombres, apellidos, telefono, dv_ruc, idciudad, iddepartamento, fecha_registro) 
+    VALUES(?, ?, ?, ?, ?, ?, ?, ?)`, [ci, nombres, apellidos, telefono, dvRuc, idciudad, iddepartamento, strFi], (err, rows, fields) => {
             if (!err) {
                 res.sendStatus(204);
             } else {
@@ -23,13 +23,13 @@ router.post("/", (req, res) => {
 
 router.put("/:ci", (req, res) => {
     console.log(req.body);
-    const { nombres, apellidos, telefono, dvRuc, idciudad, fechaIngreso } = req.body;
+    const { nombres, apellidos, telefono, dvRuc, idciudad, iddepartamento, fechaIngreso } = req.body;
     const { ci } = req.params;
     const fi = new Date(fechaIngreso);
     const strFi = `${fi.getFullYear()}-${fi.getMonth() + 1}-${fi.getDate()}`;
     console.log("string date: " + strFi);
-    database.query(`UPDATE cliente SET nombres = ?, apellidos = ?, telefono = ?, dv_ruc = ?, idciudad = ?, fecha_registro = ? 
-    WHERE ci = ?`, [nombres, apellidos, telefono, dvRuc, idciudad, strFi, ci], (err, rows, fields) => {
+    database.query(`UPDATE cliente SET nombres = ?, apellidos = ?, telefono = ?, dv_ruc = ?, idciudad = ?, iddepartamento = ?, fecha_registro = ? 
+    WHERE ci = ?`, [nombres, apellidos, telefono, dvRuc, idciudad, iddepartamento,strFi, ci], (err, rows, fields) => {
             if (!err) {
                 res.sendStatus(204);
             } else {
@@ -41,7 +41,7 @@ router.put("/:ci", (req, res) => {
 
 router.get("/", (req, res) => {
     const { limit, offset } = req.query;
-    let sqlQuery = "SELECT * FROM vw_clientes_ciudades_departamentos"
+    let sqlQuery = "SELECT * FROM vw_clientes"
     if (limit != null) {
         sqlQuery += " LIMIT "+limit;
         if (offset != null) {
@@ -71,7 +71,7 @@ router.delete("/:ci", (req, res) => {
 });
 
 router.get("/total", (req, res) => {
-    database.query("SELECT COUNT(*) as 'total' FROM vw_clientes_ciudades_departamentos", (err, rows, fields) => {
+    database.query("SELECT COUNT(*) as 'total' FROM vw_clientes", (err, rows, fields) => {
         if (!err) {
             res.send(String(rows[0].total));
         } else {

@@ -97,15 +97,18 @@ COMMENT = 'Cargo del funcionario. Ej: Mecanico, Mecanico Jefe, Cajero';
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`funcionario` (
   `idfuncionario` INT NOT NULL,
-  `razonsocial` VARCHAR(50) NULL,
   `telefono` VARCHAR(45) NULL,
   `ci` VARCHAR(45) NULL,
-  `cargo` INT NOT NULL,
-  `password` VARCHAR(50) NULL COMMENT 'Contraseña de acceso al sistema. Se debe encriptar usando SHA256 o similar',
+  `idcargo` INT NOT NULL,
+  `password` VARCHAR(150) NULL COMMENT 'Contraseña de acceso al sistema. Se debe encriptar usando SHA256 o similar',
+  `nombres` VARCHAR(45) NOT NULL,
+  `apellidos` VARCHAR(45) NOT NULL,
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `acceso_sistema` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`idfuncionario`),
-  INDEX `fk_funcionario_cargo_idx` (`cargo` ASC),
+  INDEX `fk_funcionario_cargo_idx` (`idcargo` ASC),
   CONSTRAINT `fk_funcionario_cargo`
-    FOREIGN KEY (`cargo`)
+    FOREIGN KEY (`idcargo`)
     REFERENCES `sgt`.`cargo` (`idcargo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
@@ -642,14 +645,19 @@ USE `sgt` ;
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_ciudades_departamentos` (`idciudad` INT, `nombre` INT, `iddepartamento` INT, `departamento` INT);
 
 -- -----------------------------------------------------
--- Placeholder table for view `sgt`.`vw_clientes_ciudades_departamentos`
+-- Placeholder table for view `sgt`.`vw_clientes`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sgt`.`vw_clientes_ciudades_departamentos` (`ci` INT, `nombres` INT, `apellidos` INT, `telefono` INT, `dvRuc` INT, `fechaIngreso` INT, `idciudad` INT, `ciudad` INT, `iddepartamento` INT, `departamento` INT);
+CREATE TABLE IF NOT EXISTS `sgt`.`vw_clientes` (`ci` INT, `nombres` INT, `apellidos` INT, `telefono` INT, `dvRuc` INT, `fechaRegistro` INT, `idciudad` INT, `iddepartamento` INT, `ciudad` INT, `departamento` INT, `fechaIngreso` INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `sgt`.`vw_departamentos_regiones`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_departamentos_regiones` (`iddepartamento` INT, `nombre` INT, `idregion` INT, `region` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sgt`.`vw_funcionarios`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`vw_funcionarios` (`idfuncionario` INT, `nombres` INT, `apellidos` INT, `telefono` INT, `ci` INT, `activo` INT, `accesoSistema` INT, `idcargo` INT, `cargo` INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `sgt`.`vw_modelos`
@@ -669,11 +677,11 @@ USE `sgt`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_ciudades_departamentos` AS select `sgt`.`ciudad`.`idciudad` AS `idciudad`,`sgt`.`ciudad`.`nombre` AS `nombre`,`sgt`.`departamento`.`iddepartamento` AS `iddepartamento`,`sgt`.`departamento`.`nombre` AS `departamento` from (`sgt`.`ciudad` join `sgt`.`departamento` on((`sgt`.`departamento`.`iddepartamento` = `sgt`.`ciudad`.`iddepartamento`)));
 
 -- -----------------------------------------------------
--- View `sgt`.`vw_clientes_ciudades_departamentos`
+-- View `sgt`.`vw_clientes`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `sgt`.`vw_clientes_ciudades_departamentos`;
+DROP TABLE IF EXISTS `sgt`.`vw_clientes`;
 USE `sgt`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_clientes_ciudades_departamentos` AS select `sgt`.`cliente`.`ci` AS `ci`,`sgt`.`cliente`.`nombres` AS `nombres`,`sgt`.`cliente`.`apellidos` AS `apellidos`,`sgt`.`cliente`.`telefono` AS `telefono`,`sgt`.`cliente`.`dv_ruc` AS `dvRuc`,`sgt`.`cliente`.`fecha_registro` AS `fechaIngreso`,`sgt`.`cliente`.`idciudad` AS `idciudad`,`sgt`.`ciudad`.`nombre` AS `ciudad`,`sgt`.`departamento`.`iddepartamento` AS `iddepartamento`,`sgt`.`departamento`.`nombre` AS `departamento` from ((`sgt`.`cliente` join `sgt`.`ciudad` on((`sgt`.`ciudad`.`idciudad` = `sgt`.`cliente`.`idciudad`))) join `sgt`.`departamento` on((`sgt`.`ciudad`.`iddepartamento` = `sgt`.`departamento`.`iddepartamento`)));
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_clientes` AS select `sgt`.`cliente`.`ci` AS `ci`,`sgt`.`cliente`.`nombres` AS `nombres`,`sgt`.`cliente`.`apellidos` AS `apellidos`,`sgt`.`cliente`.`telefono` AS `telefono`,`sgt`.`cliente`.`dv_ruc` AS `dvRuc`,`sgt`.`cliente`.`fecha_registro` AS `fechaRegistro`,`sgt`.`cliente`.`idciudad` AS `idciudad`,`sgt`.`cliente`.`iddepartamento` AS `iddepartamento`,`sgt`.`ciudad`.`nombre` AS `ciudad`,`sgt`.`departamento`.`nombre` AS `departamento`,`sgt`.`cliente`.`fecha_registro` AS `fechaIngreso` from ((`sgt`.`cliente` join `sgt`.`ciudad` on(((`sgt`.`ciudad`.`idciudad` = `sgt`.`cliente`.`idciudad`) and (`sgt`.`ciudad`.`iddepartamento` = `sgt`.`cliente`.`iddepartamento`)))) join `sgt`.`departamento` on((`sgt`.`departamento`.`iddepartamento` = `sgt`.`cliente`.`iddepartamento`)));
 
 -- -----------------------------------------------------
 -- View `sgt`.`vw_departamentos_regiones`
@@ -681,6 +689,13 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY D
 DROP TABLE IF EXISTS `sgt`.`vw_departamentos_regiones`;
 USE `sgt`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_departamentos_regiones` AS select `sgt`.`departamento`.`iddepartamento` AS `iddepartamento`,`sgt`.`departamento`.`nombre` AS `nombre`,`sgt`.`departamento`.`idregion` AS `idregion`,`sgt`.`region`.`nombre` AS `region` from (`sgt`.`departamento` join `sgt`.`region` on((`sgt`.`departamento`.`idregion` = `sgt`.`region`.`idregion`)));
+
+-- -----------------------------------------------------
+-- View `sgt`.`vw_funcionarios`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sgt`.`vw_funcionarios`;
+USE `sgt`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_funcionarios` AS select `sgt`.`funcionario`.`idfuncionario` AS `idfuncionario`,`sgt`.`funcionario`.`nombres` AS `nombres`,`sgt`.`funcionario`.`apellidos` AS `apellidos`,`sgt`.`funcionario`.`telefono` AS `telefono`,`sgt`.`funcionario`.`ci` AS `ci`,`sgt`.`funcionario`.`activo` AS `activo`,`sgt`.`funcionario`.`acceso_sistema` AS `accesoSistema`,`sgt`.`funcionario`.`idcargo` AS `idcargo`,`sgt`.`cargo`.`nombre` AS `cargo` from (`sgt`.`funcionario` join `sgt`.`cargo` on((`sgt`.`funcionario`.`idcargo` = `sgt`.`cargo`.`idcargo`)));
 
 -- -----------------------------------------------------
 -- View `sgt`.`vw_modelos`
