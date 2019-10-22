@@ -18,7 +18,13 @@ router.post("/", (req, res) => {
 });
 
 router.get("/", (req, res) => {
-    database.query("SELECT * FROM vw_modelos", (err, rows, fields) => {
+    const { idmarca } = req.query;
+    console.log('la marca recibida es: ' + idmarca);
+    let query = "SELECT * FROM vw_modelos";
+    if (idmarca != null) {
+        query = `SELECT * FROM vw_modelos WHERE idmarca = ${idmarca}`;
+    }
+    database.query(query, (err, rows, fields) => {
         if (!err) {
             res.json(rows);
         } else {

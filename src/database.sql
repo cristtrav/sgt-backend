@@ -163,11 +163,12 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`vehiculo` (
   `idvehiculo` INT NOT NULL,
-  `descripcion` VARCHAR(45) NULL,
   `propietario` INT NOT NULL,
   `observacion` VARCHAR(200) NULL,
-  `fecha_registro` DATE NULL,
+  `fecha_ingreso` DATE NULL,
   `modelo` INT NOT NULL,
+  `chapa` VARCHAR(10) NULL,
+  `color` VARCHAR(25) NULL,
   PRIMARY KEY (`idvehiculo`),
   INDEX `fk_vehiculo_cliente1_idx` (`propietario` ASC),
   INDEX `fk_vehiculo_modelo1_idx` (`modelo` ASC),
@@ -670,6 +671,11 @@ CREATE TABLE IF NOT EXISTS `sgt`.`vw_modelos` (`idmodelo` INT, `nombre` INT, `id
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_proveedores` (`idproveedor` INT, `razonsocial` INT, `telefono` INT, `dvRuc` INT, `documento` INT, `contacto` INT, `telefonoContacto` INT, `activo` INT, `fechaIngreso` INT, `email` INT);
 
 -- -----------------------------------------------------
+-- Placeholder table for view `sgt`.`vw_vehiculos`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`vw_vehiculos` (`idvehiculo` INT, `cipropietario` INT, `nombresPropietario` INT, `apellidosPropietario` INT, `idmodelo` INT, `modelo` INT, `anioModelo` INT, `idmarca` INT, `marca` INT, `fechaIngreso` INT, `chapa` INT, `color` INT, `observacion` INT);
+
+-- -----------------------------------------------------
 -- View `sgt`.`vw_ciudades_departamentos`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `sgt`.`vw_ciudades_departamentos`;
@@ -710,6 +716,13 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY D
 DROP TABLE IF EXISTS `sgt`.`vw_proveedores`;
 USE `sgt`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_proveedores` AS select `sgt`.`proveedor`.`idproveedor` AS `idproveedor`,`sgt`.`proveedor`.`razonsocial` AS `razonsocial`,`sgt`.`proveedor`.`telefono` AS `telefono`,`sgt`.`proveedor`.`dv_ruc` AS `dvRuc`,`sgt`.`proveedor`.`documento` AS `documento`,`sgt`.`proveedor`.`contacto` AS `contacto`,`sgt`.`proveedor`.`telefono_contacto` AS `telefonoContacto`,`sgt`.`proveedor`.`activo` AS `activo`,`sgt`.`proveedor`.`fecha_ingreso` AS `fechaIngreso`,`sgt`.`proveedor`.`email` AS `email` from `sgt`.`proveedor`;
+
+-- -----------------------------------------------------
+-- View `sgt`.`vw_vehiculos`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sgt`.`vw_vehiculos`;
+USE `sgt`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_vehiculos` AS select `sgt`.`vehiculo`.`idvehiculo` AS `idvehiculo`,`sgt`.`vehiculo`.`propietario` AS `cipropietario`,`sgt`.`cliente`.`nombres` AS `nombresPropietario`,`sgt`.`cliente`.`apellidos` AS `apellidosPropietario`,`sgt`.`vehiculo`.`modelo` AS `idmodelo`,`sgt`.`modelo`.`nombre` AS `modelo`,`sgt`.`modelo`.`anio` AS `anioModelo`,`sgt`.`marca`.`idmarca` AS `idmarca`,`sgt`.`marca`.`nombre` AS `marca`,`sgt`.`vehiculo`.`fecha_ingreso` AS `fechaIngreso`,`sgt`.`vehiculo`.`chapa` AS `chapa`,`sgt`.`vehiculo`.`color` AS `color`,`sgt`.`vehiculo`.`observacion` AS `observacion` from (((`sgt`.`vehiculo` join `sgt`.`cliente` on((`sgt`.`vehiculo`.`propietario` = `sgt`.`cliente`.`ci`))) join `sgt`.`modelo` on((`sgt`.`vehiculo`.`modelo` = `sgt`.`modelo`.`idmodelo`))) join `sgt`.`marca` on((`sgt`.`modelo`.`idmarca` = `sgt`.`marca`.`idmarca`)));
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

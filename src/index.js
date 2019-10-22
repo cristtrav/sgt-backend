@@ -26,6 +26,7 @@ app.use("/api/marcas", require("./routes/marcas"));
 app.use("/api/modelos", require("./routes/modelos"));
 app.use("/api/cargos", require("./routes/cargos"));
 app.use("/api/funcionarios", require("./routes/funcionarios"));
+app.use("/api/vehiculos", require("./routes/vehiculos"));
 
 //Starting the server
 app.listen(app.get("port"), () => {
