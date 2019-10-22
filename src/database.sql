@@ -147,7 +147,6 @@ CREATE TABLE IF NOT EXISTS `sgt`.`modelo` (
   `idmodelo` INT NOT NULL,
   `nombre` CHAR(20) NULL,
   `idmarca` INT NOT NULL,
-  `anio` YEAR NULL,
   PRIMARY KEY (`idmodelo`),
   INDEX `fk_modelo_marca1_idx` (`idmarca` ASC),
   CONSTRAINT `fk_modelo_marca1`
@@ -169,6 +168,7 @@ CREATE TABLE IF NOT EXISTS `sgt`.`vehiculo` (
   `modelo` INT NOT NULL,
   `chapa` VARCHAR(10) NULL,
   `color` VARCHAR(25) NULL,
+  `anio` YEAR NULL,
   PRIMARY KEY (`idvehiculo`),
   INDEX `fk_vehiculo_cliente1_idx` (`propietario` ASC),
   INDEX `fk_vehiculo_modelo1_idx` (`modelo` ASC),
@@ -663,7 +663,7 @@ CREATE TABLE IF NOT EXISTS `sgt`.`vw_funcionarios` (`idfuncionario` INT, `nombre
 -- -----------------------------------------------------
 -- Placeholder table for view `sgt`.`vw_modelos`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sgt`.`vw_modelos` (`idmodelo` INT, `nombre` INT, `idmarca` INT, `marca` INT, `anio` INT);
+CREATE TABLE IF NOT EXISTS `sgt`.`vw_modelos` (`idmodelo` INT, `nombre` INT, `idmarca` INT, `marca` INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `sgt`.`vw_proveedores`
@@ -708,7 +708,7 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY D
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `sgt`.`vw_modelos`;
 USE `sgt`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_modelos` AS select `sgt`.`modelo`.`idmodelo` AS `idmodelo`,`sgt`.`modelo`.`nombre` AS `nombre`,`sgt`.`modelo`.`idmarca` AS `idmarca`,`sgt`.`marca`.`nombre` AS `marca`,`sgt`.`modelo`.`anio` AS `anio` from (`sgt`.`modelo` join `sgt`.`marca` on((`sgt`.`marca`.`idmarca` = `sgt`.`modelo`.`idmarca`)));
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_modelos` AS select `sgt`.`modelo`.`idmodelo` AS `idmodelo`,`sgt`.`modelo`.`nombre` AS `nombre`,`sgt`.`modelo`.`idmarca` AS `idmarca`,`sgt`.`marca`.`nombre` AS `marca` from (`sgt`.`modelo` join `sgt`.`marca` on((`sgt`.`marca`.`idmarca` = `sgt`.`modelo`.`idmarca`)));
 
 -- -----------------------------------------------------
 -- View `sgt`.`vw_proveedores`
@@ -722,7 +722,7 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY D
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `sgt`.`vw_vehiculos`;
 USE `sgt`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_vehiculos` AS select `sgt`.`vehiculo`.`idvehiculo` AS `idvehiculo`,`sgt`.`vehiculo`.`propietario` AS `cipropietario`,`sgt`.`cliente`.`nombres` AS `nombresPropietario`,`sgt`.`cliente`.`apellidos` AS `apellidosPropietario`,`sgt`.`vehiculo`.`modelo` AS `idmodelo`,`sgt`.`modelo`.`nombre` AS `modelo`,`sgt`.`modelo`.`anio` AS `anioModelo`,`sgt`.`marca`.`idmarca` AS `idmarca`,`sgt`.`marca`.`nombre` AS `marca`,`sgt`.`vehiculo`.`fecha_ingreso` AS `fechaIngreso`,`sgt`.`vehiculo`.`chapa` AS `chapa`,`sgt`.`vehiculo`.`color` AS `color`,`sgt`.`vehiculo`.`observacion` AS `observacion` from (((`sgt`.`vehiculo` join `sgt`.`cliente` on((`sgt`.`vehiculo`.`propietario` = `sgt`.`cliente`.`ci`))) join `sgt`.`modelo` on((`sgt`.`vehiculo`.`modelo` = `sgt`.`modelo`.`idmodelo`))) join `sgt`.`marca` on((`sgt`.`modelo`.`idmarca` = `sgt`.`marca`.`idmarca`)));
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_vehiculos` AS select `sgt`.`vehiculo`.`idvehiculo` AS `idvehiculo`,`sgt`.`vehiculo`.`propietario` AS `cipropietario`,`sgt`.`cliente`.`nombres` AS `nombresPropietario`,`sgt`.`cliente`.`apellidos` AS `apellidosPropietario`,`sgt`.`vehiculo`.`modelo` AS `idmodelo`,`sgt`.`modelo`.`nombre` AS `modelo`,`sgt`.`vehiculo`.`anio` AS `anioModelo`,`sgt`.`marca`.`idmarca` AS `idmarca`,`sgt`.`marca`.`nombre` AS `marca`,`sgt`.`vehiculo`.`fecha_ingreso` AS `fechaIngreso`,`sgt`.`vehiculo`.`chapa` AS `chapa`,`sgt`.`vehiculo`.`color` AS `color`,`sgt`.`vehiculo`.`observacion` AS `observacion` from (((`sgt`.`vehiculo` join `sgt`.`cliente` on((`sgt`.`vehiculo`.`propietario` = `sgt`.`cliente`.`ci`))) join `sgt`.`modelo` on((`sgt`.`vehiculo`.`modelo` = `sgt`.`modelo`.`idmodelo`))) join `sgt`.`marca` on((`sgt`.`modelo`.`idmarca` = `sgt`.`marca`.`idmarca`)));
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

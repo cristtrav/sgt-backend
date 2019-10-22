@@ -4,15 +4,15 @@ const util = require("./../util");
 const database = require("./../database");
 
 router.post("/", (req, res) => {
-    const { idmodelo, nombre, idmarca, anio } = req.body;
+    const { idmodelo, nombre, idmarca } = req.body;
     database.query(`INSERT INTO 
-    modelo(idmodelo, nombre, idmarca, anio) 
-    VALUES(?, ?, ?, ?)`, [idmodelo, nombre, idmarca, anio], (err, rows, fields) => {
+    modelo(idmodelo, nombre, idmarca) 
+    VALUES(?, ?, ?)`, [idmodelo, nombre, idmarca], (err, rows, fields) => {
         if (!err) {
             res.sendStatus(204);
         } else {
             console.log(err);
-            res.status(500).status(util.mysqlMsgToHuman(err));
+            res.status(500).send(util.mysqlMsgToHuman(err));
         }
     });
 });
@@ -35,10 +35,10 @@ router.get("/", (req, res) => {
 });
 
 router.put("/:idmodelo", (req, res) => {
-    const { nombre, anio, idmarca } = req.body;
+    const { nombre, idmarca } = req.body;
     const { idmodelo } = req.params;
-    database.query(`UPDATE modelo SET nombre = ?, idmarca = ?, anio = ? WHERE idmodelo = ?`,
-        [nombre, idmarca, anio, idmodelo], (err, rows, fields) => {
+    database.query(`UPDATE modelo SET nombre = ?, idmarca = ? WHERE idmodelo = ?`,
+        [nombre, idmarca, idmodelo], (err, rows, fields) => {
             if (!err) {
                 res.sendStatus(204);
             } else {

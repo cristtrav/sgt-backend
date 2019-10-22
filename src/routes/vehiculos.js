@@ -5,11 +5,11 @@ const database = require("./../database");
 const util = require("./../util");
 
 router.post("/", (req, res)=>{
-    const { idvehiculo, cipropietario, idmodelo, fechaIngreso, observacion, color, chapa } = req.body;
+    const { idvehiculo, cipropietario, idmodelo, fechaIngreso, observacion, color, chapa, anioModelo } = req.body;
     const fi = new Date(fechaIngreso);
     const strFi = `${fi.getFullYear()}-${fi.getMonth() + 1}-${fi.getDate()}`;
-    database.query(`INSERT INTO vehiculo(idvehiculo, propietario, modelo, chapa, color, fecha_ingreso, observacion)
-    VALUES(?, ?, ?, ?, ?, ?, ?)`, [idvehiculo, cipropietario, idmodelo, chapa, color, strFi, observacion],
+    database.query(`INSERT INTO vehiculo(idvehiculo, propietario, modelo, chapa, color, fecha_ingreso, observacion, anio)
+    VALUES(?, ?, ?, ?, ?, ?, ?, ?)`, [idvehiculo, cipropietario, idmodelo, chapa, color, strFi, observacion, anioModelo],
     (err, rows, fields)=>{
         if(!err){
             res.sendStatus(204);
@@ -31,7 +31,7 @@ router.get("/", (req, res)=>{
 });
 
 router.put("/", (req, res)=>{
-    const { idvehiculo, cipropietario, idmodelo, fechaIngreso, observacion, color, chapa } = req.body;
+    const { idvehiculo, cipropietario, idmodelo, fechaIngreso, observacion, color, chapa, anioModelo } = req.body;
     const fi = new Date(fechaIngreso);
     const strFi = `${fi.getFullYear()}-${fi.getMonth() + 1}-${fi.getDate()}`;
     database.query(`UPDATE vehiculo SET propietario = ?,
@@ -39,7 +39,8 @@ router.put("/", (req, res)=>{
     fecha_ingreso = ?,
     color = ?,
     chapa = ?,
-    observacion = ? WHERE idvehiculo = ?`, [cipropietario, idmodelo, strFi, color, chapa, observacion, idvehiculo], (err, rows, fields)=>{
+    observacion = ?,
+    anio = ? WHERE idvehiculo = ?`, [cipropietario, idmodelo, strFi, color, chapa, observacion, anioModelo, idvehiculo], (err, rows, fields)=>{
         if(!err){
             res.sendStatus(204);
         }else{
