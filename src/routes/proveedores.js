@@ -16,6 +16,7 @@ router.get("/", (req, res)=>{
 });
 
 router.post("/", (req, res)=>{
+    console.log('post proveedor');
     console.log(req.body);
     const {idproveedor, razonsocial, documento, dvRuc, telefono, contacto, activo, fechaIngreso, telefonoContacto, email} = req.body;
     const fi = new Date(fechaIngreso);

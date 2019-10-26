@@ -190,30 +190,30 @@ COMMENT = 'Datos de los vehiculos\n';
 -- Table `sgt`.`solicitud_servicio`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`solicitud_servicio` (
-  `idsolicitud_servicio` INT NOT NULL,
-  `vehiculo` INT NOT NULL,
-  `fecha_ingreso` DATE NULL,
+  `idsolicitud_servicio` INT NOT NULL AUTO_INCREMENT,
+  `idvehiculo` INT NOT NULL,
+  `fecha_ingreso` DATE NOT NULL,
   `fecha_salida` DATE NULL,
-  `personal_asignado` INT NOT NULL,
-  `fecha_hora_registro` DATETIME NULL,
-  `funcionario_registro` INT NOT NULL,
-  `completado` TINYINT(1) NULL,
+  `idpersonal_asignado` INT NOT NULL,
+  `fecha_hora_registro` DATETIME NOT NULL,
+  `idfuncionario_registro` INT NOT NULL,
+  `completado` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`idsolicitud_servicio`),
-  INDEX `fk_historial_servicio_vehiculo1_idx` (`vehiculo` ASC),
-  INDEX `fk_historial_servicio_funcionario1_idx` (`personal_asignado` ASC),
-  INDEX `fk_solicitud_servicio_funcionario1_idx` (`funcionario_registro` ASC),
+  INDEX `fk_historial_servicio_vehiculo1_idx` (`idvehiculo` ASC),
+  INDEX `fk_historial_servicio_funcionario1_idx` (`idpersonal_asignado` ASC),
+  INDEX `fk_solicitud_servicio_funcionario1_idx` (`idfuncionario_registro` ASC),
   CONSTRAINT `fk_historial_servicio_vehiculo1`
-    FOREIGN KEY (`vehiculo`)
+    FOREIGN KEY (`idvehiculo`)
     REFERENCES `sgt`.`vehiculo` (`idvehiculo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_historial_servicio_funcionario1`
-    FOREIGN KEY (`personal_asignado`)
+    FOREIGN KEY (`idpersonal_asignado`)
     REFERENCES `sgt`.`funcionario` (`idfuncionario`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_solicitud_servicio_funcionario1`
-    FOREIGN KEY (`funcionario_registro`)
+    FOREIGN KEY (`idfuncionario_registro`)
     REFERENCES `sgt`.`funcionario` (`idfuncionario`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
@@ -225,30 +225,30 @@ COMMENT = 'Servicios tecnicos realizados a un determinado vehiculo';
 -- Table `sgt`.`solicitud_servicio`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`solicitud_servicio` (
-  `idsolicitud_servicio` INT NOT NULL,
-  `vehiculo` INT NOT NULL,
-  `fecha_ingreso` DATE NULL,
+  `idsolicitud_servicio` INT NOT NULL AUTO_INCREMENT,
+  `idvehiculo` INT NOT NULL,
+  `fecha_ingreso` DATE NOT NULL,
   `fecha_salida` DATE NULL,
-  `personal_asignado` INT NOT NULL,
-  `fecha_hora_registro` DATETIME NULL,
-  `funcionario_registro` INT NOT NULL,
-  `completado` TINYINT(1) NULL,
+  `idpersonal_asignado` INT NOT NULL,
+  `fecha_hora_registro` DATETIME NOT NULL,
+  `idfuncionario_registro` INT NOT NULL,
+  `completado` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`idsolicitud_servicio`),
-  INDEX `fk_historial_servicio_vehiculo1_idx` (`vehiculo` ASC),
-  INDEX `fk_historial_servicio_funcionario1_idx` (`personal_asignado` ASC),
-  INDEX `fk_solicitud_servicio_funcionario1_idx` (`funcionario_registro` ASC),
+  INDEX `fk_historial_servicio_vehiculo1_idx` (`idvehiculo` ASC),
+  INDEX `fk_historial_servicio_funcionario1_idx` (`idpersonal_asignado` ASC),
+  INDEX `fk_solicitud_servicio_funcionario1_idx` (`idfuncionario_registro` ASC),
   CONSTRAINT `fk_historial_servicio_vehiculo1`
-    FOREIGN KEY (`vehiculo`)
+    FOREIGN KEY (`idvehiculo`)
     REFERENCES `sgt`.`vehiculo` (`idvehiculo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_historial_servicio_funcionario1`
-    FOREIGN KEY (`personal_asignado`)
+    FOREIGN KEY (`idpersonal_asignado`)
     REFERENCES `sgt`.`funcionario` (`idfuncionario`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_solicitud_servicio_funcionario1`
-    FOREIGN KEY (`funcionario_registro`)
+    FOREIGN KEY (`idfuncionario_registro`)
     REFERENCES `sgt`.`funcionario` (`idfuncionario`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
@@ -257,11 +257,51 @@ COMMENT = 'Servicios tecnicos realizados a un determinado vehiculo';
 
 
 -- -----------------------------------------------------
+-- Table `sgt`.`repuesto`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`repuesto` (
+  `idrepuesto` INT NOT NULL,
+  `precio` INT NOT NULL DEFAULT 0,
+  `nombre` VARCHAR(45) NOT NULL,
+  `stock` DECIMAL(12,2) NOT NULL DEFAULT 0,
+  `stock_minimo` DECIMAL(12,2) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`idrepuesto`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `sgt`.`detalle_servicios`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`detalle_servicios` (
+  `servicio` INT(11) NOT NULL,
+  `solicitud_servicio` INT(11) NOT NULL,
+  `observacion` VARCHAR(200) NULL DEFAULT NULL,
+  `precio` INT(11) NULL DEFAULT NULL,
+  `completado` TINYINT(1) NULL DEFAULT NULL,
+  PRIMARY KEY (`servicio`, `solicitud_servicio`),
+  INDEX `fk_servicio_has_historial_servicio_historial_servicio1_idx` (`solicitud_servicio` ASC),
+  INDEX `fk_servicio_has_historial_servicio_servicio1_idx` (`servicio` ASC),
+  CONSTRAINT `fk_servicio_has_historial_servicio_historial_servicio1`
+    FOREIGN KEY (`solicitud_servicio`)
+    REFERENCES `sgt`.`solicitud_servicio` (`idsolicitud_servicio`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_servicio_has_historial_servicio_servicio1`
+    FOREIGN KEY (`servicio`)
+    REFERENCES `sgt`.`servicio` (`idservicio`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COMMENT = 'Lista de servicios realizados en un servicio tecnico';
+
+
+-- -----------------------------------------------------
 -- Table `sgt`.`proveedor`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`proveedor` (
   `idproveedor` INT NOT NULL,
-  `razonsocial` VARCHAR(80) NULL,
+  `razonsocial` VARCHAR(80) NOT NULL,
   `telefono` VARCHAR(25) NULL,
   `dv_ruc` TINYINT NULL,
   `email` VARCHAR(80) NULL,
@@ -273,99 +313,6 @@ CREATE TABLE IF NOT EXISTS `sgt`.`proveedor` (
   PRIMARY KEY (`idproveedor`))
 ENGINE = InnoDB
 COMMENT = 'Proveedores de repuestos';
-
-
--- -----------------------------------------------------
--- Table `sgt`.`repuesto`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sgt`.`repuesto` (
-  `idrepuesto` INT NOT NULL,
-  `precio` INT NULL,
-  `nombre` VARCHAR(45) NULL,
-  `proveedor` INT NOT NULL,
-  PRIMARY KEY (`idrepuesto`),
-  INDEX `fk_repuesto_proveedor1_idx` (`proveedor` ASC),
-  CONSTRAINT `fk_repuesto_proveedor1`
-    FOREIGN KEY (`proveedor`)
-    REFERENCES `sgt`.`proveedor` (`idproveedor`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `sgt`.`detalle_servicios`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sgt`.`detalle_servicios` (
-  `servicio` INT NOT NULL,
-  `solicitud_servicio` INT NOT NULL,
-  `observacion` VARCHAR(200) NULL,
-  `precio` INT NULL,
-  `completado` TINYINT(1) NULL,
-  PRIMARY KEY (`servicio`, `solicitud_servicio`),
-  INDEX `fk_servicio_has_historial_servicio_historial_servicio1_idx` (`solicitud_servicio` ASC),
-  INDEX `fk_servicio_has_historial_servicio_servicio1_idx` (`servicio` ASC),
-  CONSTRAINT `fk_servicio_has_historial_servicio_servicio1`
-    FOREIGN KEY (`servicio`)
-    REFERENCES `sgt`.`servicio` (`idservicio`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_servicio_has_historial_servicio_historial_servicio1`
-    FOREIGN KEY (`solicitud_servicio`)
-    REFERENCES `sgt`.`solicitud_servicio` (`idsolicitud_servicio`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-COMMENT = 'Lista de servicios realizados en un servicio tecnico';
-
-
--- -----------------------------------------------------
--- Table `sgt`.`detalle_servicios`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sgt`.`detalle_servicios` (
-  `servicio` INT NOT NULL,
-  `solicitud_servicio` INT NOT NULL,
-  `observacion` VARCHAR(200) NULL,
-  `precio` INT NULL,
-  `completado` TINYINT(1) NULL,
-  PRIMARY KEY (`servicio`, `solicitud_servicio`),
-  INDEX `fk_servicio_has_historial_servicio_historial_servicio1_idx` (`solicitud_servicio` ASC),
-  INDEX `fk_servicio_has_historial_servicio_servicio1_idx` (`servicio` ASC),
-  CONSTRAINT `fk_servicio_has_historial_servicio_servicio1`
-    FOREIGN KEY (`servicio`)
-    REFERENCES `sgt`.`servicio` (`idservicio`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_servicio_has_historial_servicio_historial_servicio1`
-    FOREIGN KEY (`solicitud_servicio`)
-    REFERENCES `sgt`.`solicitud_servicio` (`idsolicitud_servicio`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-COMMENT = 'Lista de servicios realizados en un servicio tecnico';
-
-
--- -----------------------------------------------------
--- Table `sgt`.`repuesto_utilizado`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sgt`.`repuesto_utilizado` (
-  `repuesto` INT NOT NULL,
-  `historial_servicio` INT NOT NULL,
-  PRIMARY KEY (`repuesto`, `historial_servicio`),
-  INDEX `fk_repuesto_has_historial_servicio_historial_servicio1_idx` (`historial_servicio` ASC),
-  INDEX `fk_repuesto_has_historial_servicio_repuesto1_idx` (`repuesto` ASC),
-  CONSTRAINT `fk_repuesto_has_historial_servicio_repuesto1`
-    FOREIGN KEY (`repuesto`)
-    REFERENCES `sgt`.`repuesto` (`idrepuesto`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_repuesto_has_historial_servicio_historial_servicio1`
-    FOREIGN KEY (`historial_servicio`)
-    REFERENCES `sgt`.`solicitud_servicio` (`idsolicitud_servicio`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-COMMENT = 'Repuestos utilizados en un determinado servicio tecnico';
 
 
 -- -----------------------------------------------------
@@ -389,12 +336,12 @@ COMMENT = 'Talonario de factura legal con datos proporcionados por tributacion. 
 -- Table `sgt`.`factura_venta`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`factura_venta` (
-  `idfactura_venta` INT NOT NULL,
-  `fecha` DATE NULL,
+  `idfactura_venta` INT NOT NULL AUTO_INCREMENT,
+  `fecha` DATE NOT NULL,
   `nro_factura` VARCHAR(45) NULL,
-  `total` INT NULL,
-  `total_iva10` VARCHAR(45) NULL,
-  `total_iva5` VARCHAR(45) NULL,
+  `total` DECIMAL(9,0) NOT NULL,
+  `total_iva10` DECIMAL(9,0) NOT NULL,
+  `total_iva5` DECIMAL(9,0) NOT NULL,
   `cliente` INT NOT NULL,
   `talonario_factura` INT NOT NULL COMMENT 'A que talonario impreso pertenece. Factura preimpresa',
   `anulado` TINYINT(1) NULL,
@@ -421,13 +368,13 @@ COMMENT = 'Cabecera de factura de venta\n';
 -- Table `sgt`.`detalle_factura_venta`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`detalle_factura_venta` (
-  `iddetalle_factura_venta` INT NOT NULL,
-  `item` VARCHAR(100) NULL COMMENT 'Descripcion del item a cobrar. Servicio o producto\n',
-  `cantidad` INT NULL,
-  `monto` INT NULL,
-  `subtotal` INT NULL,
+  `iddetalle_factura_venta` INT NOT NULL AUTO_INCREMENT,
+  `item` VARCHAR(100) NOT NULL COMMENT 'Descripcion del item a cobrar. Servicio o producto\n',
+  `cantidad` DECIMAL(9,2) NOT NULL,
+  `monto` DECIMAL(9,0) NOT NULL,
+  `subtotal` DECIMAL(9,0) NOT NULL,
   `factura_venta` INT NOT NULL,
-  `porcentaje_iva` TINYINT NULL COMMENT '0, 5 ó 10\n',
+  `porcentaje_iva` TINYINT NOT NULL COMMENT '0, 5 ó 10\n',
   PRIMARY KEY (`iddetalle_factura_venta`),
   INDEX `fk_detalle_factura_venta_factura_venta1_idx` (`factura_venta` ASC),
   CONSTRAINT `fk_detalle_factura_venta_factura_venta1`
@@ -519,22 +466,57 @@ COMMENT = 'Movimientos de caja. Entrada o salida de dinero\n';
 
 
 -- -----------------------------------------------------
+-- Table `sgt`.`pedido_proveedor`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`pedido_proveedor` (
+  `idpedido` INT NOT NULL AUTO_INCREMENT,
+  `fecha_pedido` DATE NOT NULL,
+  `total` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `recibido` TINYINT(1) NOT NULL DEFAULT 0,
+  `idproveedor` INT NOT NULL,
+  `fecha_recepcion` VARCHAR(45) NULL,
+  `idfuncionario` INT NOT NULL,
+  PRIMARY KEY (`idpedido`),
+  INDEX `fk_pedido_proveedor_proveedor1_idx` (`idproveedor` ASC),
+  INDEX `fk_pedido_proveedor_funcionario1_idx` (`idfuncionario` ASC),
+  CONSTRAINT `fk_pedido_proveedor_proveedor1`
+    FOREIGN KEY (`idproveedor`)
+    REFERENCES `sgt`.`proveedor` (`idproveedor`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_pedido_proveedor_funcionario1`
+    FOREIGN KEY (`idfuncionario`)
+    REFERENCES `sgt`.`funcionario` (`idfuncionario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `sgt`.`factura_compra`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`factura_compra` (
-  `idfactura_compra` INT NOT NULL,
-  `fecha` DATE NULL,
+  `idfactura_compra` INT NOT NULL AUTO_INCREMENT,
+  `fecha` DATE NOT NULL,
   `nro_factura` VARCHAR(45) NULL,
   `proveedor` INT NOT NULL,
-  `contado` TINYINT(1) NULL,
-  `total` INT NULL,
-  `total_iva10` INT NULL,
-  `total_iva5` INT NULL,
+  `contado` TINYINT(1) NOT NULL DEFAULT 1,
+  `total` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `total_iva10` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `total_iva5` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `pagado` TINYINT(1) NOT NULL DEFAULT 1,
+  `idpedido` INT NULL,
   PRIMARY KEY (`idfactura_compra`),
   INDEX `fk_factura_compra_proveedor1_idx` (`proveedor` ASC),
+  INDEX `fk_factura_compra_pedido_proveedor1_idx` (`idpedido` ASC),
   CONSTRAINT `fk_factura_compra_proveedor1`
     FOREIGN KEY (`proveedor`)
     REFERENCES `sgt`.`proveedor` (`idproveedor`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_factura_compra_pedido_proveedor1`
+    FOREIGN KEY (`idpedido`)
+    REFERENCES `sgt`.`pedido_proveedor` (`idpedido`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
@@ -545,17 +527,24 @@ COMMENT = 'Cabecera de factura de compra';
 -- Table `sgt`.`detalle_factura_compra`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`detalle_factura_compra` (
-  `iddetalle_factura_compra` INT NOT NULL,
-  `cantidad` INT NULL,
-  `precio` INT NULL,
-  `porcentaje_iva` TINYINT NULL COMMENT '0, 5 ó 10',
+  `iddetalle_factura_compra` INT NOT NULL AUTO_INCREMENT,
+  `cantidad` DECIMAL(9,2) NOT NULL DEFAULT 0,
+  `precio` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `porcentaje_iva` DECIMAL(3,0) NOT NULL DEFAULT 10 COMMENT '0, 5 ó 10',
   `repuesto` INT NOT NULL,
-  `sub_total` INT NULL,
+  `sub_total` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `idfactura_compra` INT NOT NULL,
   PRIMARY KEY (`iddetalle_factura_compra`),
   INDEX `fk_detalle_factura_compra_repuesto1_idx` (`repuesto` ASC),
+  INDEX `fk_detalle_factura_compra_factura_compra1_idx` (`idfactura_compra` ASC),
   CONSTRAINT `fk_detalle_factura_compra_repuesto1`
     FOREIGN KEY (`repuesto`)
     REFERENCES `sgt`.`repuesto` (`idrepuesto`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_detalle_factura_compra_factura_compra1`
+    FOREIGN KEY (`idfactura_compra`)
+    REFERENCES `sgt`.`factura_compra` (`idfactura_compra`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -637,6 +626,99 @@ CREATE TABLE IF NOT EXISTS `sgt`.`historial` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 COMMENT = 'Registra los eventos del sistema. Registrados por funcionario y por modulo. Ej: Modificacion o eliminacion de registros';
+
+
+-- -----------------------------------------------------
+-- Table `sgt`.`insumo_servicio`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`insumo_servicio` (
+  `idrepuesto` INT NOT NULL,
+  `idservicio` INT NOT NULL,
+  `idsolicitud_servicio` INT NOT NULL,
+  `cantidad` DECIMAL(9,2) NULL,
+  PRIMARY KEY (`idrepuesto`, `idservicio`, `idsolicitud_servicio`),
+  INDEX `fk_repuesto_has_detalle_solicitud_servicio_repuesto1_idx` (`idrepuesto` ASC),
+  CONSTRAINT `fk_repuesto_has_detalle_solicitud_servicio_repuesto1`
+    FOREIGN KEY (`idrepuesto`)
+    REFERENCES `sgt`.`repuesto` (`idrepuesto`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `sgt`.`detalle_solicitud_servicio`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`detalle_solicitud_servicio` (
+  `iddetalle_solicitud` INT NOT NULL,
+  `cantidad` DECIMAL(9,2) NOT NULL,
+  `observacion` VARCHAR(200) NULL,
+  `precio_unitario` DECIMAL(9,0) NOT NULL,
+  `idservicio` INT NOT NULL,
+  `idsolicitud_servicio` INT NOT NULL,
+  PRIMARY KEY (`iddetalle_solicitud`),
+  INDEX `fk_detalle_solicitud_servicio_servicio1_idx` (`idservicio` ASC),
+  INDEX `fk_detalle_solicitud_servicio_solicitud_servicio1_idx` (`idsolicitud_servicio` ASC),
+  CONSTRAINT `fk_detalle_solicitud_servicio_servicio1`
+    FOREIGN KEY (`idservicio`)
+    REFERENCES `sgt`.`servicio` (`idservicio`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_detalle_solicitud_servicio_solicitud_servicio1`
+    FOREIGN KEY (`idsolicitud_servicio`)
+    REFERENCES `sgt`.`solicitud_servicio` (`idsolicitud_servicio`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `sgt`.`repuesto_requerido_detalle_solicitud`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`repuesto_requerido_detalle_solicitud` (
+  `idrepuesto` INT NOT NULL,
+  `iddetalle_solicitud` INT NOT NULL,
+  `cantidad` DECIMAL(12,2) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`idrepuesto`, `iddetalle_solicitud`),
+  INDEX `fk_repuesto_has_detalle_solicitud_servicio_detalle_solicitu_idx` (`iddetalle_solicitud` ASC),
+  INDEX `fk_repuesto_has_detalle_solicitud_servicio_repuesto2_idx` (`idrepuesto` ASC),
+  CONSTRAINT `fk_repuesto_has_detalle_solicitud_servicio_repuesto2`
+    FOREIGN KEY (`idrepuesto`)
+    REFERENCES `sgt`.`repuesto` (`idrepuesto`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_repuesto_has_detalle_solicitud_servicio_detalle_solicitud_1`
+    FOREIGN KEY (`iddetalle_solicitud`)
+    REFERENCES `sgt`.`detalle_solicitud_servicio` (`iddetalle_solicitud`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `sgt`.`detalle_pedido_proveedor`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`detalle_pedido_proveedor` (
+  `iddetalle_pedido` INT NOT NULL AUTO_INCREMENT,
+  `subtotal` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `cantidad` DECIMAL(12,2) NOT NULL DEFAULT 0,
+  `precio` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `idrepuesto` INT NOT NULL,
+  `idpedido` INT NOT NULL,
+  PRIMARY KEY (`iddetalle_pedido`),
+  INDEX `fk_detalle_pedido_proveedor_repuesto1_idx` (`idrepuesto` ASC),
+  INDEX `fk_detalle_pedido_proveedor_pedido_proveedor1_idx` (`idpedido` ASC),
+  CONSTRAINT `fk_detalle_pedido_proveedor_repuesto1`
+    FOREIGN KEY (`idrepuesto`)
+    REFERENCES `sgt`.`repuesto` (`idrepuesto`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_detalle_pedido_proveedor_pedido_proveedor1`
+    FOREIGN KEY (`idpedido`)
+    REFERENCES `sgt`.`pedido_proveedor` (`idpedido`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
 
 USE `sgt` ;
 
