@@ -29,6 +29,7 @@ app.use("/api/funcionarios", require("./routes/funcionarios"));
 app.use("/api/vehiculos", require("./routes/vehiculos"));
 app.use("/api/servicios", require("./routes/servicios"));
 app.use("/api/repuestos", require('./routes/repuestos'));
+app.use("/api/pedidosproveedores", require('./routes/pedidosproveedores'));
 
 //Starting the server
 app.listen(app.get("port"), () => {
