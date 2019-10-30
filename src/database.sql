@@ -470,22 +470,39 @@ COMMENT = 'Movimientos de caja. Entrada o salida de dinero\n';
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`pedido_proveedor` (
   `idpedido` INT NOT NULL AUTO_INCREMENT,
-  `fecha_pedido` DATE NOT NULL,
-  `total` DECIMAL(12,0) NOT NULL DEFAULT 0,
-  `recibido` TINYINT(1) NOT NULL DEFAULT 0,
   `idproveedor` INT NOT NULL,
-  `fecha_recepcion` VARCHAR(45) NULL,
-  `idfuncionario` INT NOT NULL,
+  `fecha_pedido` DATE NOT NULL,
+  `idfuncionario_pedido` INT NOT NULL,
+  `aprobado` TINYINT(1) NOT NULL DEFAULT 0,
+  `fecha_aprobacion` DATE NULL,
+  `idfuncionario_aprobacion` INT NULL,
+  `recibido` TINYINT(1) NOT NULL DEFAULT 0,
+  `fecha_recepcion` DATE NULL,
+  `idfuncionario_recepcion` INT NULL,
+  `total` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `anulado` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`idpedido`),
   INDEX `fk_pedido_proveedor_proveedor1_idx` (`idproveedor` ASC),
-  INDEX `fk_pedido_proveedor_funcionario1_idx` (`idfuncionario` ASC),
+  INDEX `fk_pedido_proveedor_funcionario1_idx` (`idfuncionario_pedido` ASC),
+  INDEX `fk_pedido_proveedor_funcionario2_idx` (`idfuncionario_aprobacion` ASC),
+  INDEX `fk_pedido_proveedor_funcionario3_idx` (`idfuncionario_recepcion` ASC),
   CONSTRAINT `fk_pedido_proveedor_proveedor1`
     FOREIGN KEY (`idproveedor`)
     REFERENCES `sgt`.`proveedor` (`idproveedor`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_pedido_proveedor_funcionario1`
-    FOREIGN KEY (`idfuncionario`)
+    FOREIGN KEY (`idfuncionario_pedido`)
+    REFERENCES `sgt`.`funcionario` (`idfuncionario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_pedido_proveedor_funcionario2`
+    FOREIGN KEY (`idfuncionario_aprobacion`)
+    REFERENCES `sgt`.`funcionario` (`idfuncionario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_pedido_proveedor_funcionario3`
+    FOREIGN KEY (`idfuncionario_recepcion`)
     REFERENCES `sgt`.`funcionario` (`idfuncionario`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
@@ -705,6 +722,7 @@ CREATE TABLE IF NOT EXISTS `sgt`.`detalle_pedido_proveedor` (
   `precio` DECIMAL(12,0) NOT NULL DEFAULT 0,
   `idrepuesto` INT NOT NULL,
   `idpedido` INT NOT NULL,
+  `cantidad_recibida` DECIMAL(12,2) NOT NULL DEFAULT 0,
   PRIMARY KEY (`iddetalle_pedido`),
   INDEX `fk_detalle_pedido_proveedor_repuesto1_idx` (`idrepuesto` ASC),
   INDEX `fk_detalle_pedido_proveedor_pedido_proveedor1_idx` (`idpedido` ASC),
@@ -738,6 +756,11 @@ CREATE TABLE IF NOT EXISTS `sgt`.`vw_clientes` (`ci` INT, `nombres` INT, `apelli
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_departamentos_regiones` (`iddepartamento` INT, `nombre` INT, `idregion` INT, `region` INT);
 
 -- -----------------------------------------------------
+-- Placeholder table for view `sgt`.`vw_detalles_pedidos_proveedores`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`vw_detalles_pedidos_proveedores` (`iddetallePedido` INT, `cantidad` INT, `precio` INT, `subtotal` INT, `idpedido` INT, `idrepuesto` INT, `cantidadRecibida` INT, `repuesto` INT);
+
+-- -----------------------------------------------------
 -- Placeholder table for view `sgt`.`vw_funcionarios`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_funcionarios` (`idfuncionario` INT, `nombres` INT, `apellidos` INT, `telefono` INT, `ci` INT, `activo` INT, `accesoSistema` INT, `idcargo` INT, `cargo` INT);
@@ -746,6 +769,11 @@ CREATE TABLE IF NOT EXISTS `sgt`.`vw_funcionarios` (`idfuncionario` INT, `nombre
 -- Placeholder table for view `sgt`.`vw_modelos`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_modelos` (`idmodelo` INT, `nombre` INT, `idmarca` INT, `marca` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sgt`.`vw_pedidos_proveedores`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`vw_pedidos_proveedores` (`idpedido` INT, `idproveedor` INT, `proveedor` INT, `total` INT, `fechaPedido` INT, `idfuncionarioPedido` INT, `nombresFuncionarioPedido` INT, `apellidosFuncionarioPedido` INT, `recibido` INT, `fechaRecepcion` INT, `idfuncionarioRecepcion` INT, `nombresFuncionarioRecepcion` INT, `apellidosFuncionarioRecepcion` INT, `aprobado` INT, `fechaAprobacion` INT, `idfuncionarioAprobacion` INT, `nombresFuncionarioAprobacion` INT, `apellidosFuncionarioAprobacion` INT, `anulado` INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `sgt`.`vw_proveedores`
@@ -779,6 +807,13 @@ USE `sgt`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_departamentos_regiones` AS select `sgt`.`departamento`.`iddepartamento` AS `iddepartamento`,`sgt`.`departamento`.`nombre` AS `nombre`,`sgt`.`departamento`.`idregion` AS `idregion`,`sgt`.`region`.`nombre` AS `region` from (`sgt`.`departamento` join `sgt`.`region` on((`sgt`.`departamento`.`idregion` = `sgt`.`region`.`idregion`)));
 
 -- -----------------------------------------------------
+-- View `sgt`.`vw_detalles_pedidos_proveedores`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sgt`.`vw_detalles_pedidos_proveedores`;
+USE `sgt`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_detalles_pedidos_proveedores` AS select `sgt`.`detalle_pedido_proveedor`.`iddetalle_pedido` AS `iddetallePedido`,`sgt`.`detalle_pedido_proveedor`.`cantidad` AS `cantidad`,`sgt`.`detalle_pedido_proveedor`.`precio` AS `precio`,`sgt`.`detalle_pedido_proveedor`.`subtotal` AS `subtotal`,`sgt`.`detalle_pedido_proveedor`.`idpedido` AS `idpedido`,`sgt`.`detalle_pedido_proveedor`.`idrepuesto` AS `idrepuesto`,`sgt`.`detalle_pedido_proveedor`.`cantidad_recibida` AS `cantidadRecibida`,`sgt`.`repuesto`.`nombre` AS `repuesto` from (`sgt`.`detalle_pedido_proveedor` join `sgt`.`repuesto` on((`sgt`.`detalle_pedido_proveedor`.`idrepuesto` = `sgt`.`repuesto`.`idrepuesto`)));
+
+-- -----------------------------------------------------
 -- View `sgt`.`vw_funcionarios`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `sgt`.`vw_funcionarios`;
@@ -791,6 +826,13 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY D
 DROP TABLE IF EXISTS `sgt`.`vw_modelos`;
 USE `sgt`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_modelos` AS select `sgt`.`modelo`.`idmodelo` AS `idmodelo`,`sgt`.`modelo`.`nombre` AS `nombre`,`sgt`.`modelo`.`idmarca` AS `idmarca`,`sgt`.`marca`.`nombre` AS `marca` from (`sgt`.`modelo` join `sgt`.`marca` on((`sgt`.`marca`.`idmarca` = `sgt`.`modelo`.`idmarca`)));
+
+-- -----------------------------------------------------
+-- View `sgt`.`vw_pedidos_proveedores`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sgt`.`vw_pedidos_proveedores`;
+USE `sgt`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_pedidos_proveedores` AS select `sgt`.`pedido_proveedor`.`idpedido` AS `idpedido`,`sgt`.`pedido_proveedor`.`idproveedor` AS `idproveedor`,`sgt`.`proveedor`.`razonsocial` AS `proveedor`,`sgt`.`pedido_proveedor`.`total` AS `total`,`sgt`.`pedido_proveedor`.`fecha_pedido` AS `fechaPedido`,`sgt`.`pedido_proveedor`.`idfuncionario_pedido` AS `idfuncionarioPedido`,`f1`.`nombres` AS `nombresFuncionarioPedido`,`f1`.`apellidos` AS `apellidosFuncionarioPedido`,`sgt`.`pedido_proveedor`.`recibido` AS `recibido`,`sgt`.`pedido_proveedor`.`fecha_recepcion` AS `fechaRecepcion`,`sgt`.`pedido_proveedor`.`idfuncionario_recepcion` AS `idfuncionarioRecepcion`,`f3`.`nombres` AS `nombresFuncionarioRecepcion`,`f3`.`apellidos` AS `apellidosFuncionarioRecepcion`,`sgt`.`pedido_proveedor`.`aprobado` AS `aprobado`,`sgt`.`pedido_proveedor`.`fecha_aprobacion` AS `fechaAprobacion`,`sgt`.`pedido_proveedor`.`idfuncionario_aprobacion` AS `idfuncionarioAprobacion`,`f2`.`nombres` AS `nombresFuncionarioAprobacion`,`f2`.`apellidos` AS `apellidosFuncionarioAprobacion`,`sgt`.`pedido_proveedor`.`anulado` AS `anulado` from ((((`sgt`.`pedido_proveedor` join `sgt`.`proveedor` on((`sgt`.`pedido_proveedor`.`idproveedor` = `sgt`.`proveedor`.`idproveedor`))) join `sgt`.`funcionario` `f1` on((`sgt`.`pedido_proveedor`.`idfuncionario_pedido` = `f1`.`idfuncionario`))) left join `sgt`.`funcionario` `f2` on((`sgt`.`pedido_proveedor`.`idfuncionario_aprobacion` = `f2`.`idfuncionario`))) left join `sgt`.`funcionario` `f3` on((`sgt`.`pedido_proveedor`.`idfuncionario_recepcion` = `f3`.`idfuncionario`)));
 
 -- -----------------------------------------------------
 -- View `sgt`.`vw_proveedores`

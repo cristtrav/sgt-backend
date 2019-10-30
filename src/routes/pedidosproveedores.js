@@ -6,47 +6,62 @@ const util = require("./../util");
 
 router.post("/", (req, res) => {
     console.log(req.body);
-    const { fechaPedido, fechaRecepcion, total, idproveedor, detallepedido, idfuncionario } = req.body;
+    const { fechaPedido, total, idproveedor, detallepedido, idfuncionarioPedido } = req.body;
     const fp = new Date(fechaPedido);
     const strfp = `${fp.getFullYear()}-${fp.getMonth() + 1}-${fp.getDate()}`;
-    let strfr = null;
-    let recibido = 0;
-    if (fechaRecepcion != null) {
-        recibido = 1;
-        const fr = new Date(fechaRecepcion);
-        strfr = `${fr.getFullYear()}-${fr.getMonth() + 1}-${fr.getDate()}`;
-    }
-    database.beginTransaction();
-    try {
-
-        database.query(`INSERT INTO pedido_proveedor(fecha_pedido, fecha_recepcion, total, recibido, idproveedor, idfuncionario)
-            VALUES(?, ?, ?, ?, ?, ?)`, [strfp, strfr, total, recibido, idproveedor, idfuncionario], (err, result, fields) => {
-            if (err) {
-                throw new Error(err);
-            } else {
-                const idpedido = result.insertId;
-                for (dp of detallepedido) {
-                    const { subtotal, cantidad, precio, idrepuesto } = dp;
-                    database.query(`INSERT INTO detalle_pedido_proveedor(subtotal, cantidad, precio, idrepuesto, idpedido)
-                    VALUES(?, ?, ?, ?, ?)`, [subtotal, cantidad, precio, idrepuesto, idpedido], (err, result, fields) => {
-                        if (err) {
-                            throw new Error(err);
-                        }
+    database.beginTransaction((e) => {
+        if (e) {
+            console.log(e);
+            res.status(500).send(util.mysqlMsgToHuman(err));
+        } else {
+            database.query(`INSERT INTO pedido_proveedor(fecha_pedido, total, recibido, idproveedor, idfuncionario_pedido)
+            VALUES(?, ?, ?, ?, ?)`, [strfp, total, 0, idproveedor, idfuncionarioPedido], (err, result, fields) => {
+                if (err) {
+                    console.log(err)
+                    res.status(500).send(util.mysqlMsgToHuman(err));
+                    database.rollback(() => {
+                        throw err;
                     });
+                } else {
+                    const idpedido = result.insertId;
+                    for (dp of detallepedido) {
+                        const { subtotal, cantidad, precio, idrepuesto } = dp;
+                        database.query(`INSERT INTO detalle_pedido_proveedor(subtotal, cantidad, precio, idrepuesto, idpedido)
+                    VALUES(?, ?, ?, ?, ?)`, [subtotal, cantidad, precio, idrepuesto, idpedido], (err, result, fields) => {
+                            if (err) {
+                                console.log(err)
+                                res.status(500).send(util.mysqlMsgToHuman(err));
+                                database.rollback(() => {
+                                    throw err;
+                                });
+                            } else {
+                                database.commit((error) => {
+                                    if (error) {
+                                        console.log(err)
+                                        res.status(500).send(util.mysqlMsgToHuman(err));
+                                        database.rollback(() => {
+                                            throw err;
+                                        });
+                                    } else {
+                                        res.sendStatus(204);
+                                    }
+                                })
+                            }
+                        });
+                    }
                 }
-            }
-        });
-        database.commit();
-        res.sendStatus(204);
-    } catch (err) {
-        console.log(err);
-        database.rollback();
-        res.status(500).send(util.mysqlMsgToHuman(err));
-    }
+            });
+        }
+    });
 });
 
 router.get("/", (req, res) => {
-    database.query("SELECT * FROM vw_pedidos_proveedores", (err, result, fields) => {
+    const { anulado } = req.query;
+    let sql = "SELECT * FROM vw_pedidos_proveedores";
+    if (anulado != null) {
+        sql = `SELECT * FROM vw_pedidos_proveedores WHERE anulado = ${anulado}`;
+    }
+    database.query(sql, (err, result, fields) => {
         if (!err) {
             res.json(result);
         } else {
@@ -75,26 +90,49 @@ router.get("/:idpedido", (req, res) => {
 
 router.delete("/:idpedido", (req, res) => {
     const { idpedido } = req.params;
-    database.beginTransaction();
-    try {
-        database.query("DELETE FROM detalle_pedido_proveedor WHERE idpedido = ?", [idpedido], (err, result, fields) => {
-            if (err) throw new Error(err);
-        });
-        database.query("DELETE FROM pedido_proveedor WHERE idpedido = ?", [idpedido], (err, result, fields) => {
-            if (err) throw new Error(err);
-        });
-        database.commit();
-        res.sendStatus(204);
-    } catch (err) {
-        console.log(err);
-        database.rollback();
-        res.status(500).send(util.mysqlMsgToHuman(err));
-    }
+    database.beginTransaction((e) => {
+        if (e) {
+            console.log(e);
+            res.status(500).send(util.mysqlMsgToHuman(e));
+        } else {
+            database.query("DELETE FROM detalle_pedido_proveedor WHERE idpedido = ?", [idpedido], (err, result, fields) => {
+                if (err) {
+                    console.log(err);
+                    res.status(500).send(util.mysqlMsgToHuman(err));
+                    database.rollback((er) => {
+                        throw er;
+                    });
+                } else {
+                    database.query("DELETE FROM pedido_proveedor WHERE idpedido = ?", [idpedido], (err, result, fields) => {
+                        if (err) {
+                            console.log(err);
+                            res.status(500).send(util.mysqlMsgToHuman(err));
+                            database.rollback((er) => {
+                                throw er;
+                            });
+                        } else {
+                            database.commit((error) => {
+                                if (error) {
+                                    console.log(error);
+                                    res.status(500).send(util.mysqlMsgToHuman(error));
+                                    database.rollback((er) => {
+                                        throw er;
+                                    });
+                                } else {
+                                    res.sendStatus(204);
+                                }
+                            })
+                        }
+                    });
+                }
+            });
+        }
+    });
 });
 
 router.get("/:idpedido/detalles", (req, res) => {
     const { idpedido } = req.params;
-    database.query(`SELECT * FROM vw_detalle_pedidos_proveedores WHERE idpedido = ?`,
+    database.query(`SELECT * FROM vw_detalles_pedidos_proveedores WHERE idpedido = ?`,
         [idpedido], (err, result, fields) => {
             if (!err) {
                 res.json(result);
@@ -105,47 +143,115 @@ router.get("/:idpedido/detalles", (req, res) => {
         });
 });
 
-router.put("/", (req, res)=>{
+router.put("/", (req, res) => {
     console.log(req.body);
-    const { idpedido, fechaPedido, fechaRecepcion, total, idproveedor, detallepedido, idfuncionario } = req.body;
+    const { idpedido, fechaPedido, fechaRecepcion, fechaAprobacion, total, idproveedor, detallepedido, idfuncionarioPedido, idfuncionarioAprobacion, idfuncionarioRecepcion, recibido, aprobado } = req.body;
     const fp = new Date(fechaPedido);
     const strfp = `${fp.getFullYear()}-${fp.getMonth() + 1}-${fp.getDate()}`;
     let strfr = null;
-    let recibido = 0;
+    let strfa = null;
     if (fechaRecepcion != null) {
-        recibido = 1;
         const fr = new Date(fechaRecepcion);
         strfr = `${fr.getFullYear()}-${fr.getMonth() + 1}-${fr.getDate()}`;
     }
-    console.log('fecha recepcion str: '+strfr);
-    database.beginTransaction();
-    try {
-        database.query("DELETE FROM detalle_pedido_proveedor WHERE idpedido = ?", [idpedido], (err, result, fields)=>{
-            if(err) throw new Error(err);
-        });
-        for (dp of detallepedido) {
-            const { subtotal, cantidad, precio, idrepuesto } = dp;
-            database.query(`INSERT INTO detalle_pedido_proveedor(subtotal, cantidad, precio, idrepuesto, idpedido)
-            VALUES(?, ?, ?, ?, ?)`, [subtotal, cantidad, precio, idrepuesto, idpedido], (err, result, fields) => {
-                if (err) throw new Error(err);
-            });
-        }
-        database.query(`UPDATE pedido_proveedor SET
-        fecha_pedido = ?,
-        fecha_recepcion = ?,
-        total = ?,
-        recibido = ?,
-        idproveedor = ?,
-        idfuncionario = ? WHERE idpedido = ?`, [strfp, strfr, total, recibido, idproveedor, idfuncionario, idpedido], (err, result, fields) => {
-            if (err) throw new Error(err);
-        });
-        database.commit();
-        res.sendStatus(204);
-    } catch (err) {
-        console.log(err);
-        database.rollback();
-        res.status(500).send(util.mysqlMsgToHuman(err));
+    if (fechaAprobacion != null) {
+        const fa = new Date(fechaAprobacion);
+        strfa = `${fa.getFullYear()}-${fa.getMonth() + 1}-${fa.getDate()}`;
     }
+
+    database.beginTransaction((e) => {
+        if (e) {
+            console.log(e);
+            res.status(500).send(util.mysqlMsgToHuman(e));
+        } else {
+            database.query(`UPDATE pedido_proveedor SET
+            fecha_pedido = ?,
+            fecha_aprobacion = ?,
+            fecha_recepcion = ?,
+            idfuncionario_pedido = ?,
+            idfuncionario_aprobacion = ?,
+            idfuncionario_recepcion = ?,
+            aprobado = ?,
+            recibido = ?,
+            total = ?,
+            idproveedor = ?
+            WHERE idpedido = ?`, [strfp, strfa, strfr, idfuncionarioPedido, idfuncionarioAprobacion, idfuncionarioRecepcion, aprobado, recibido, total, idproveedor, idpedido], (err, result, fields) => {
+                if (err) {
+                    console.log(err);
+                    res.status(500).send(util.mysqlMsgToHuman(err));
+                    database.rollback((error) => {
+                        throw error;
+                    });
+                } else {
+                    database.query("DELETE FROM detalle_pedido_proveedor WHERE idpedido = ?", [idpedido], (err, result, fields) => {
+                        if (err) {
+                            console.log(err);
+                            res.status(500).send(util.mysqlMsgToHuman(err));
+                            database.rollback((error) => {
+                                throw error;
+                            });
+                        } else {
+                            for (dp of detallepedido) {
+                                const { subtotal, cantidad, precio, idrepuesto } = dp;
+                                database.query(`INSERT INTO detalle_pedido_proveedor(subtotal, cantidad, precio, idrepuesto, idpedido)
+                                VALUES(?, ?, ?, ?, ?)`, [subtotal, cantidad, precio, idrepuesto, idpedido], (err, result, fields) => {
+                                    if (err) {
+                                        console.log(err);
+                                        res.status(500).send(util.mysqlMsgToHuman(err));
+                                        database.rollback((error) => {
+                                            throw error;
+                                        });
+                                    }
+                                });
+                            }
+                            database.commit((error) => {
+                                if (error) {
+                                    console.log(err);
+                                    res.status(500).send(util.mysqlMsgToHuman(err));
+                                    database.rollback((error) => {
+                                        throw error;
+                                    });
+                                } else {
+                                    res.sendStatus(204);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+        }
+    });
+});
+
+router.post("/:idpedido/aprobacion", (req, res) => {
+    const { idpedido } = req.params;
+    const { idfuncionarioAprobacion, fechaAprobacion } = req.body;
+    const fa = new Date(fechaAprobacion);
+    const strfa = `${fa.getFullYear()}-${fa.getMonth() + 1}-${fa.getDate()}`;
+    database.query(`UPDATE pedido_proveedor SET
+    aprobado = 1,
+    idfuncionario_aprobacion = ?,
+    fecha_aprobacion = ? WHERE idpedido = ?`, [idfuncionarioAprobacion, strfa, idpedido], (err, result, fields) => {
+        if (!err) {
+            res.sendStatus(204);
+        } else {
+            console.log(err);
+            res.status(500).send(util.mysqlMsgToHuman(err));
+        }
+    });
+});
+
+router.post("/:idpedido/anulacion", (req, res) => {
+    const { idpedido } = req.params;
+    database.query("UPDATE pedido_proveedor SET anulado = true WHERE idpedido = ?", [idpedido], (err, result, fields) => {
+        if (!err) {
+            res.sendStatus(204);
+        } else {
+            console.log(err);
+            res.status(500).send(util.mysqlMsgToHuman(err));
+        }
+    });
 });
 
 module.exports = router;
