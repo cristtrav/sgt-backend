@@ -19,36 +19,36 @@ router.post("/", (req, res) => {
                 if (err) {
                     console.log(err)
                     res.status(500).send(util.mysqlMsgToHuman(err));
-                    database.rollback(() => {
-                        throw err;
-                    });
+                    database.rollback();
                 } else {
                     const idpedido = result.insertId;
+                    let sql = "";
                     for (dp of detallepedido) {
-                        const { subtotal, cantidad, precio, idrepuesto } = dp;
-                        database.query(`INSERT INTO detalle_pedido_proveedor(subtotal, cantidad, precio, idrepuesto, idpedido)
-                    VALUES(?, ?, ?, ?, ?)`, [subtotal, cantidad, precio, idrepuesto, idpedido], (err, result, fields) => {
-                            if (err) {
-                                console.log(err)
-                                res.status(500).send(util.mysqlMsgToHuman(err));
-                                database.rollback(() => {
-                                    throw err;
-                                });
-                            } else {
-                                database.commit((error) => {
-                                    if (error) {
-                                        console.log(err)
-                                        res.status(500).send(util.mysqlMsgToHuman(err));
-                                        database.rollback(() => {
-                                            throw err;
-                                        });
-                                    } else {
-                                        res.sendStatus(204);
-                                    }
-                                })
-                            }
-                        });
+                        sql += `INSERT INTO detalle_pedido_proveedor(subtotal, cantidad, precio, idrepuesto, idpedido)VALUES
+                        (${database.escape(dp.subtotal)},
+                        ${database.escape(dp.cantidad)},
+                        ${database.escape(dp.precio)},
+                        ${database.escape(dp.idrepuesto)},
+                        ${database.escape(idpedido)});`;
                     }
+                    database.query(sql, (err, result, fields) => {
+                        if (err) {
+                            console.log(err)
+                            res.status(500).send(util.mysqlMsgToHuman(err));
+                            database.rollback();
+                        } else {
+                            database.commit((error) => {
+                                if (error) {
+                                    console.log(err)
+                                    res.status(500).send(util.mysqlMsgToHuman(err));
+                                    database.rollback();
+                                } else {
+                                    res.sendStatus(204);
+                                }
+                            })
+                        }
+                    });
+
                 }
             });
         }

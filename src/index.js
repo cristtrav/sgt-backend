@@ -30,6 +30,7 @@ app.use("/api/vehiculos", require("./routes/vehiculos"));
 app.use("/api/servicios", require("./routes/servicios"));
 app.use("/api/repuestos", require('./routes/repuestos'));
 app.use("/api/pedidosproveedores", require('./routes/pedidosproveedores'));
+app.use("/api/compras", require("./routes/compras"))
 
 //Starting the server
 app.listen(app.get("port"), () => {

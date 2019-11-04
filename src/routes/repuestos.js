@@ -5,7 +5,7 @@ const database = require("./../database");
 const util = require("./../util");
 
 router.get("/", (req, res) => {
-    database.query("SELECT idrepuesto, nombre, precio, stock, stock_minimo AS stockMinimo FROM repuesto", (err, rows, fields) => {
+    database.query("SELECT idrepuesto, nombre, precio, stock, stock_minimo AS stockMinimo, porcentaje_iva AS porcentajeIva FROM repuesto", (err, rows, fields) => {
         if (!err) {
             res.json(rows);
         } else {

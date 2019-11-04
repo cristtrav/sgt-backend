@@ -265,6 +265,7 @@ CREATE TABLE IF NOT EXISTS `sgt`.`repuesto` (
   `nombre` VARCHAR(45) NOT NULL,
   `stock` DECIMAL(12,2) NOT NULL DEFAULT 0,
   `stock_minimo` DECIMAL(12,2) NOT NULL DEFAULT 0,
+  `porcentaje_iva` DECIMAL(3,0) NOT NULL DEFAULT 10,
   PRIMARY KEY (`idrepuesto`))
 ENGINE = InnoDB;
 
@@ -516,18 +517,19 @@ CREATE TABLE IF NOT EXISTS `sgt`.`factura_compra` (
   `idfactura_compra` INT NOT NULL AUTO_INCREMENT,
   `fecha` DATE NOT NULL,
   `nro_factura` VARCHAR(45) NULL,
-  `proveedor` INT NOT NULL,
+  `idproveedor` INT NOT NULL,
   `contado` TINYINT(1) NOT NULL DEFAULT 1,
   `total` DECIMAL(12,0) NOT NULL DEFAULT 0,
   `total_iva10` DECIMAL(12,0) NOT NULL DEFAULT 0,
   `total_iva5` DECIMAL(12,0) NOT NULL DEFAULT 0,
   `pagado` TINYINT(1) NOT NULL DEFAULT 1,
   `idpedido` INT NULL,
+  `anulado` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`idfactura_compra`),
-  INDEX `fk_factura_compra_proveedor1_idx` (`proveedor` ASC),
+  INDEX `fk_factura_compra_proveedor1_idx` (`idproveedor` ASC),
   INDEX `fk_factura_compra_pedido_proveedor1_idx` (`idpedido` ASC),
   CONSTRAINT `fk_factura_compra_proveedor1`
-    FOREIGN KEY (`proveedor`)
+    FOREIGN KEY (`idproveedor`)
     REFERENCES `sgt`.`proveedor` (`idproveedor`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
@@ -548,14 +550,14 @@ CREATE TABLE IF NOT EXISTS `sgt`.`detalle_factura_compra` (
   `cantidad` DECIMAL(9,2) NOT NULL DEFAULT 0,
   `precio` DECIMAL(12,0) NOT NULL DEFAULT 0,
   `porcentaje_iva` DECIMAL(3,0) NOT NULL DEFAULT 10 COMMENT '0, 5 ó 10',
-  `repuesto` INT NOT NULL,
+  `idrepuesto` INT NOT NULL,
   `sub_total` DECIMAL(12,0) NOT NULL DEFAULT 0,
   `idfactura_compra` INT NOT NULL,
   PRIMARY KEY (`iddetalle_factura_compra`),
-  INDEX `fk_detalle_factura_compra_repuesto1_idx` (`repuesto` ASC),
+  INDEX `fk_detalle_factura_compra_repuesto1_idx` (`idrepuesto` ASC),
   INDEX `fk_detalle_factura_compra_factura_compra1_idx` (`idfactura_compra` ASC),
   CONSTRAINT `fk_detalle_factura_compra_repuesto1`
-    FOREIGN KEY (`repuesto`)
+    FOREIGN KEY (`idrepuesto`)
     REFERENCES `sgt`.`repuesto` (`idrepuesto`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
@@ -751,6 +753,11 @@ CREATE TABLE IF NOT EXISTS `sgt`.`vw_ciudades_departamentos` (`idciudad` INT, `n
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_clientes` (`ci` INT, `nombres` INT, `apellidos` INT, `telefono` INT, `dvRuc` INT, `fechaRegistro` INT, `idciudad` INT, `iddepartamento` INT, `ciudad` INT, `departamento` INT, `fechaIngreso` INT);
 
 -- -----------------------------------------------------
+-- Placeholder table for view `sgt`.`vw_compras`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sgt`.`vw_compras` (`idcompra` INT, `fecha` INT, `nroFactura` INT, `idproveedor` INT, `proveedor` INT, `contado` INT, `pagado` INT, `total` INT, `totalIva5` INT, `totalIva10` INT, `anulado` INT, `idpedido` INT);
+
+-- -----------------------------------------------------
 -- Placeholder table for view `sgt`.`vw_departamentos_regiones`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sgt`.`vw_departamentos_regiones` (`iddepartamento` INT, `nombre` INT, `idregion` INT, `region` INT);
@@ -758,7 +765,7 @@ CREATE TABLE IF NOT EXISTS `sgt`.`vw_departamentos_regiones` (`iddepartamento` I
 -- -----------------------------------------------------
 -- Placeholder table for view `sgt`.`vw_detalles_pedidos_proveedores`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sgt`.`vw_detalles_pedidos_proveedores` (`iddetallePedido` INT, `cantidad` INT, `precio` INT, `subtotal` INT, `idpedido` INT, `idrepuesto` INT, `cantidadRecibida` INT, `repuesto` INT);
+CREATE TABLE IF NOT EXISTS `sgt`.`vw_detalles_pedidos_proveedores` (`iddetallePedido` INT, `cantidad` INT, `precio` INT, `subtotal` INT, `idpedido` INT, `idrepuesto` INT, `cantidadRecibida` INT, `repuesto` INT, `porcentajeIva` INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `sgt`.`vw_funcionarios`
@@ -800,6 +807,13 @@ USE `sgt`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_clientes` AS select `sgt`.`cliente`.`ci` AS `ci`,`sgt`.`cliente`.`nombres` AS `nombres`,`sgt`.`cliente`.`apellidos` AS `apellidos`,`sgt`.`cliente`.`telefono` AS `telefono`,`sgt`.`cliente`.`dv_ruc` AS `dvRuc`,`sgt`.`cliente`.`fecha_registro` AS `fechaRegistro`,`sgt`.`cliente`.`idciudad` AS `idciudad`,`sgt`.`cliente`.`iddepartamento` AS `iddepartamento`,`sgt`.`ciudad`.`nombre` AS `ciudad`,`sgt`.`departamento`.`nombre` AS `departamento`,`sgt`.`cliente`.`fecha_registro` AS `fechaIngreso` from ((`sgt`.`cliente` join `sgt`.`ciudad` on(((`sgt`.`ciudad`.`idciudad` = `sgt`.`cliente`.`idciudad`) and (`sgt`.`ciudad`.`iddepartamento` = `sgt`.`cliente`.`iddepartamento`)))) join `sgt`.`departamento` on((`sgt`.`departamento`.`iddepartamento` = `sgt`.`cliente`.`iddepartamento`)));
 
 -- -----------------------------------------------------
+-- View `sgt`.`vw_compras`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sgt`.`vw_compras`;
+USE `sgt`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_compras` AS select `sgt`.`factura_compra`.`idfactura_compra` AS `idcompra`,`sgt`.`factura_compra`.`fecha` AS `fecha`,`sgt`.`factura_compra`.`nro_factura` AS `nroFactura`,`sgt`.`factura_compra`.`idproveedor` AS `idproveedor`,`sgt`.`proveedor`.`razonsocial` AS `proveedor`,`sgt`.`factura_compra`.`contado` AS `contado`,`sgt`.`factura_compra`.`pagado` AS `pagado`,`sgt`.`factura_compra`.`total` AS `total`,`sgt`.`factura_compra`.`total_iva5` AS `totalIva5`,`sgt`.`factura_compra`.`total_iva10` AS `totalIva10`,`sgt`.`factura_compra`.`anulado` AS `anulado`,`sgt`.`factura_compra`.`idpedido` AS `idpedido` from (`sgt`.`factura_compra` join `sgt`.`proveedor` on((`sgt`.`factura_compra`.`idproveedor` = `sgt`.`proveedor`.`idproveedor`)));
+
+-- -----------------------------------------------------
 -- View `sgt`.`vw_departamentos_regiones`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `sgt`.`vw_departamentos_regiones`;
@@ -811,7 +825,7 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY D
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `sgt`.`vw_detalles_pedidos_proveedores`;
 USE `sgt`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_detalles_pedidos_proveedores` AS select `sgt`.`detalle_pedido_proveedor`.`iddetalle_pedido` AS `iddetallePedido`,`sgt`.`detalle_pedido_proveedor`.`cantidad` AS `cantidad`,`sgt`.`detalle_pedido_proveedor`.`precio` AS `precio`,`sgt`.`detalle_pedido_proveedor`.`subtotal` AS `subtotal`,`sgt`.`detalle_pedido_proveedor`.`idpedido` AS `idpedido`,`sgt`.`detalle_pedido_proveedor`.`idrepuesto` AS `idrepuesto`,`sgt`.`detalle_pedido_proveedor`.`cantidad_recibida` AS `cantidadRecibida`,`sgt`.`repuesto`.`nombre` AS `repuesto` from (`sgt`.`detalle_pedido_proveedor` join `sgt`.`repuesto` on((`sgt`.`detalle_pedido_proveedor`.`idrepuesto` = `sgt`.`repuesto`.`idrepuesto`)));
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`toor`@`localhost` SQL SECURITY DEFINER VIEW `sgt`.`vw_detalles_pedidos_proveedores` AS select `sgt`.`detalle_pedido_proveedor`.`iddetalle_pedido` AS `iddetallePedido`,`sgt`.`detalle_pedido_proveedor`.`cantidad` AS `cantidad`,`sgt`.`detalle_pedido_proveedor`.`precio` AS `precio`,`sgt`.`detalle_pedido_proveedor`.`subtotal` AS `subtotal`,`sgt`.`detalle_pedido_proveedor`.`idpedido` AS `idpedido`,`sgt`.`detalle_pedido_proveedor`.`idrepuesto` AS `idrepuesto`,`sgt`.`detalle_pedido_proveedor`.`cantidad_recibida` AS `cantidadRecibida`,`sgt`.`repuesto`.`nombre` AS `repuesto`,`sgt`.`repuesto`.`porcentaje_iva` AS `porcentajeIva` from (`sgt`.`detalle_pedido_proveedor` join `sgt`.`repuesto` on((`sgt`.`detalle_pedido_proveedor`.`idrepuesto` = `sgt`.`repuesto`.`idrepuesto`)));
 
 -- -----------------------------------------------------
 -- View `sgt`.`vw_funcionarios`
